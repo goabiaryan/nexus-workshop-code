@@ -3,6 +3,17 @@ from crewai_tools import SerperDevTool, ScrapeWebsiteTool
 from pydantic import BaseModel, Field
 from typing import List
 from dotenv import load_dotenv
+import time
+import sys
+from pathlib import Path
+# Add parent directory to path for utils import
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from utils.visualization import (
+    print_crew_startup, 
+    print_execution_start, 
+    print_execution_complete, 
+    print_outputs_saved
+)
 load_dotenv()
 
 QWEN_MODEL = "ollama/qwen2.5:7b"
@@ -99,8 +110,29 @@ crew = Crew(
 )
 
 if __name__ == "__main__":
-    print("Starting 2025-grade content creation crew...")
+    # Visualization: Show setup
+    print_crew_startup(
+        crew=crew,
+        agents=[researcher, writer, editor],
+        tasks=[research_task, writing_task, editing_task],
+        model=QWEN_MODEL,
+        process="Hierarchical",
+        memory=True,
+        cache=True,
+        verbose=True,
+        estimated_time="3-5 minutes (with web research)"
+    )
+    
+    start_time = time.time()
+    
+    print_execution_start()
+    
     result = crew.kickoff()
-    print("\n" + "="*60)
-    print("FINAL ARTICLE SAVED TO outputs/FINAL_*.md")
-    print("="*60)
+    
+    print_execution_complete(start_time, result)
+    
+    print_outputs_saved([
+        research_task.output_file,
+        writing_task.output_file,
+        editing_task.output_file
+    ])

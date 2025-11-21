@@ -4,6 +4,17 @@ from pydantic import BaseModel, Field
 from typing import List
 from dotenv import load_dotenv
 import os
+import time
+import sys
+from pathlib import Path
+# Add parent directory to path for utils import
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from utils.visualization import (
+    print_crew_startup, 
+    print_execution_start, 
+    print_execution_complete, 
+    print_outputs_saved
+)
 load_dotenv()
 
 os.makedirs("launch_outputs", exist_ok=True)
@@ -150,8 +161,32 @@ crew = Crew(
 )
 
 if __name__ == "__main__":
-    print("Launching 2025-grade Product Launch Crew (Slide 13 in real life)")
+    # Visualization: Show setup
+    print_crew_startup(
+        crew=crew,
+        agents=[market_researcher, product_strategist, marketing_writer, tech_writer, coordinator],
+        tasks=[market_task, strategy_task, marketing_task, tech_docs_task, final_review_task],
+        model=QWEN_MODEL,
+        process="Hierarchical (with async execution)",
+        memory=True,
+        cache=True,
+        verbose=True,
+        max_rpm=60,
+        estimated_time="5-10 minutes (complex orchestration)"
+    )
+    
+    start_time = time.time()
+    
+    print_execution_start()
+    
     result = crew.kickoff()
-    print("\n" + "="*70)
-    print("LAUNCH READY – All files in ./launch_outputs/")
-    print("="*70)
+    
+    print_execution_complete(start_time, result)
+    
+    print_outputs_saved([
+        market_task.output_file,
+        strategy_task.output_file,
+        marketing_task.output_file,
+        tech_docs_task.output_file,
+        final_review_task.output_file
+    ], output_dir="./launch_outputs")
